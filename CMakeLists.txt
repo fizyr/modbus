@@ -1,10 +1,12 @@
 cmake_minimum_required(VERSION 3.8)
 project(modbus)
 
-find_package(catkin REQUIRED COMPONENTS
-	dr_base
-)
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+add_compile_options(-Wall -Wextra -Wpedantic)
 
+find_package(catkin REQUIRED COMPONENTS)
 find_package(Boost REQUIRED COMPONENTS system thread)
 
 catkin_package(
@@ -13,8 +15,8 @@ catkin_package(
 	DEPENDS Boost
 )
 
-dr_include_directories(
-	include/${PROJECT_NAME}
+include_directories(include/${PROJECT_NAME})
+include_directories(SYSTEM
 	${catkin_INCLUDE_DIRS}
 	${Boost_INCLUDE_DIRS}
 )
