@@ -9,6 +9,9 @@ add_compile_options(-Wall -Wextra -Wpedantic)
 find_package(catkin REQUIRED COMPONENTS)
 find_package(Boost REQUIRED COMPONENTS system thread)
 
+set(CMAKE_THREAD_PREFER_PTHREAD ON)
+find_package(Threads)
+
 catkin_package(
 	INCLUDE_DIRS include
 	LIBRARIES ${PROJECT_NAME}
@@ -33,10 +36,12 @@ add_executable(${PROJECT_NAME}_test_client
 target_link_libraries(${PROJECT_NAME}
 	${catkin_LIBRARIES}
 	${Boost_LIBRARIES}
+	Threads::Threads
 )
 
 target_link_libraries(${PROJECT_NAME}_test_client
 	${PROJECT_NAME}
+	Threads::Threads
 )
 
 install(TARGETS ${PROJECT_NAME}
