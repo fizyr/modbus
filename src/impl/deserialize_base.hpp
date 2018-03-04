@@ -27,7 +27,7 @@
 #include <string>
 #include <vector>
 
-#include <boost/system/error_code.hpp>
+#include <system_error>
 
 #include "error.hpp"
 
@@ -41,7 +41,7 @@ namespace impl {
 	 *
 	 * \return False if the size is not enough or if error code is not empty.
 	 */
-	inline bool check_length(std::size_t actual, std::size_t needed, boost::system::error_code & error) {
+	inline bool check_length(std::size_t actual, std::size_t needed, std::error_code & error) {
 		if (error) {
 			return false;
 		} else if (actual < needed) {
@@ -58,9 +58,9 @@ namespace impl {
 	 *
 	 * \return The parsed boolean.
 	 */
-	inline bool uint16_to_bool(uint16_t value, boost::system::error_code & error) {
+	inline bool uint16_to_bool(uint16_t value, std::error_code & error) {
 		if (value == 0xff00) return true;
-		if (value != 0x0000 && !error) error = boost::system::error_code(errc::invalid_value, modbus_category());
+		if (value != 0x0000 && !error) error = std::error_code(errc::invalid_value, modbus_category());
 		return false;
 	}
 
@@ -92,7 +92,7 @@ namespace impl {
 	 * \return Iterator past the read sequence.
 	 */
 	template<typename InputIterator>
-	InputIterator deserialize_bool(InputIterator start, bool & out, boost::system::error_code & error) {
+	InputIterator deserialize_bool(InputIterator start, bool & out, std::error_code & error) {
 		std::uint16_t word = 0xbeef;
 		deserialize_be16(start, word);
 		out = uint16_to_bool(word, error);
@@ -109,7 +109,7 @@ namespace impl {
 	 * \return The input iterator after parsing the function code.
 	 */
 	template<typename InputIterator>
-	InputIterator deserialize_function(InputIterator start, std::uint8_t expected_function, boost::system::error_code & error) {
+	InputIterator deserialize_function(InputIterator start, std::uint8_t expected_function, std::error_code & error) {
 		std::uint8_t function;
 		start = deserialize_be8(start, function);
 		if (function != expected_function && !error) error = modbus_error(errc::unexpected_function_code);
@@ -126,7 +126,7 @@ namespace impl {
 	 * \return Iterator past the read sequence.
 	 */
 	template<typename InputIterator>
-	InputIterator deserialize_bit_list(InputIterator start, std::size_t length, std::size_t bit_count, std::vector<bool> & values, boost::system::error_code & error) {
+	InputIterator deserialize_bit_list(InputIterator start, std::size_t length, std::size_t bit_count, std::vector<bool> & values, std::error_code & error) {
 		// Check available data length.
 		if (!check_length(length, (bit_count + 7) / 8, error)) return start;
 
@@ -154,7 +154,7 @@ namespace impl {
 	 * \return Iterator past the read sequence.
 	 */
 	template<typename InputIterator>
-	InputIterator deserialize_word_list(InputIterator start, std::size_t length, std::size_t word_count, std::vector<std::uint16_t> & values, boost::system::error_code & error) {
+	InputIterator deserialize_word_list(InputIterator start, std::size_t length, std::size_t word_count, std::vector<std::uint16_t> & values, std::error_code & error) {
 		// Check available data length.
 		if (!check_length(length, word_count * 2, error)) return start;
 
@@ -177,7 +177,7 @@ namespace impl {
 	 * \return Iterator past the read sequence.
 	 */
 	template<typename InputIterator>
-	InputIterator deserialize_bits_request(InputIterator start, std::size_t length, std::vector<bool> & values, boost::system::error_code & error) {
+	InputIterator deserialize_bits_request(InputIterator start, std::size_t length, std::vector<bool> & values, std::error_code & error) {
 		if (!check_length(length, 3, error)) return start;
 
 		// Read word and byte count.
@@ -205,7 +205,7 @@ namespace impl {
 	 * \return Iterator past the read sequence.
 	 */
 	template<typename InputIterator>
-	InputIterator deserialize_bits_response(InputIterator start, std::size_t length, std::vector<bool> & values, boost::system::error_code & error) {
+	InputIterator deserialize_bits_response(InputIterator start, std::size_t length, std::vector<bool> & values, std::error_code & error) {
 		if (!check_length(length, 3, error)) return start;
 
 		// Read word and byte count.
@@ -224,7 +224,7 @@ namespace impl {
 	 * \return Iterator past the read sequence.
 	 */
 	template<typename InputIterator>
-	InputIterator deserialize_words_request(InputIterator start, std::size_t length, std::vector<std::uint16_t> & values, boost::system::error_code & error) {
+	InputIterator deserialize_words_request(InputIterator start, std::size_t length, std::vector<std::uint16_t> & values, std::error_code & error) {
 		if (!check_length(length, 3, error)) return start;
 
 		// Read word and byte count.
@@ -252,7 +252,7 @@ namespace impl {
 	 * \return Iterator past the read sequence.
 	 */
 	template<typename InputIterator>
-	InputIterator deserialize_words_response(InputIterator start, std::size_t length, std::vector<std::uint16_t> & values, boost::system::error_code & error) {
+	InputIterator deserialize_words_response(InputIterator start, std::size_t length, std::vector<std::uint16_t> & values, std::error_code & error) {
 		if (!check_length(length, 3, error)) return start;
 
 		// Read word and byte count.

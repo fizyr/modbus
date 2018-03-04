@@ -23,11 +23,11 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <functional>
+#include <system_error>
 
-#include <boost/asio/connect.hpp>
-#include <boost/asio/read.hpp>
-#include <boost/asio/write.hpp>
-#include <boost/system/system_error.hpp>
+#include <asio/connect.hpp>
+#include <asio/read.hpp>
+#include <asio/write.hpp>
 
 #include "client.hpp"
 #include "impl/serialize.hpp"
@@ -38,9 +38,9 @@ namespace modbus {
 namespace {
 	// Make a handler that deserializes a messages and passes it to the user callback.
 	template<typename T>
-	std::function<std::uint8_t const * (std::uint8_t const * start, std::size_t length, tcp_mbap const & header, boost::system::error_code error)>
+	std::function<std::uint8_t const * (std::uint8_t const * start, std::size_t length, tcp_mbap const & header, std::error_code error)>
 	make_handler(client::Callback<T> && callback) {
-		return [callback] (std::uint8_t const * start, std::size_t length, tcp_mbap const & header, boost::system::error_code error) {
+		return [callback] (std::uint8_t const * start, std::size_t length, tcp_mbap const & header, std::error_code error) {
 			T response;
 			std::uint8_t const * current = start;
 			std::uint8_t const * end     = start + length;
@@ -108,12 +108,12 @@ void client::send_message(
 }
 
 /// Construct a client.
-client::client(boost::asio::io_service & ios) : strand(ios), socket(ios), resolver(ios) {
+client::client(asio::io_service & ios) : strand(ios), socket(ios), resolver(ios) {
 	_connected = false;
 }
 
 /// Connect to a server.
-void client::connect(std::string const & hostname, std::string const & port, std::function<void(boost::system::error_code const &)> callback) {
+void client::connect(std::string const & hostname, std::string const & port, std::function<void(std::error_code const &)> callback) {
 	tcp::resolver::query query(hostname, port);
 
 	auto handler = strand.wrap(std::bind(&client::on_resolve, this, std::placeholders::_1, std::placeholders::_2, callback));
@@ -123,11 +123,11 @@ void client::connect(std::string const & hostname, std::string const & port, std
 /// Disconnect from the server.
 void client::close() {
 	// Call all remaining transaction handlers with operation_aborted, then clear transactions.
-	for (auto & transaction : transactions) transaction.second.handler(nullptr, 0, {}, boost::asio::error::operation_aborted);
+	for (auto & transaction : transactions) transaction.second.handler(nullptr, 0, {}, asio::error::operation_aborted);
 	transactions.clear();
 
 	// Shutdown and close socket.
-	boost::system::error_code error;
+	std::error_code error;
 	resolver.cancel();
 	socket.shutdown(tcp::socket::shutdown_both, error);
 	socket.close(error);
@@ -142,7 +142,7 @@ void client::reset() {
 	writing.clear();
 
 	// Old socket may hold now invalid file descriptor.
-	socket = boost::asio::ip::tcp::socket(ios());
+	socket = asio::ip::tcp::socket(ios());
 	_connected = false;
 }
 
@@ -192,15 +192,15 @@ void client::mask_write_register(std::uint8_t unit, std::uint16_t address, std::
 }
 
 /// Called when the resolver finished resolving a hostname.
-void client::on_resolve(boost::system::error_code const & error, tcp::resolver::iterator iterator, std::function<void(boost::system::error_code const &)> callback) {
+void client::on_resolve(std::error_code const & error, tcp::resolver::iterator iterator, std::function<void(std::error_code const &)> callback) {
 	if (error) return callback(error);
 
 	auto handler = strand.wrap(std::bind(&client::on_connect, this, std::placeholders::_1, std::placeholders::_2, callback));
-	boost::asio::async_connect(socket, iterator, handler);
+	asio::async_connect(socket, iterator, handler);
 }
 
 /// Called when the socket finished connecting.
-void client::on_connect(boost::system::error_code const & error, tcp::resolver::iterator iterator, std::function<void(boost::system::error_code const &)> callback) {
+void client::on_connect(std::error_code const & error, tcp::resolver::iterator iterator, std::function<void(std::error_code const &)> callback) {
 	(void) iterator;
 
 	if (callback) callback(error);
@@ -214,7 +214,7 @@ void client::on_connect(boost::system::error_code const & error, tcp::resolver::
 }
 
 /// Called when the socket finished a read operation.
-void client::on_read(boost::system::error_code const & error, size_t bytes_transferred) {
+void client::on_read(std::error_code const & error, size_t bytes_transferred) {
 	if (error) {
 		if (on_io_error) on_io_error(error);
 		return;
@@ -231,7 +231,7 @@ void client::on_read(boost::system::error_code const & error, size_t bytes_trans
 }
 
 /// Called when the socket finished a write operation.
-void client::on_write(boost::system::error_code const & error, size_t bytes_transferred) {
+void client::on_write(std::error_code const & error, size_t bytes_transferred) {
 	if (error) {
 		if (on_io_error) on_io_error(error);
 		writing.clear();
@@ -259,9 +259,9 @@ bool client::process_message() {
 	/// Modbus/TCP MBAP header is 7 bytes.
 	if (read_buffer.size() < 7) return false;
 
-	uint8_t const * data = boost::asio::buffer_cast<uint8_t const *>(read_buffer.data());
+	uint8_t const * data = asio::buffer_cast<uint8_t const *>(read_buffer.data());
 
-	boost::system::error_code error;
+	std::error_code error;
 	tcp_mbap header;
 
 	data = impl::deserialize(data, read_buffer.size(), header, error);
@@ -282,7 +282,7 @@ bool client::process_message() {
 		// TODO: Transaction not found. Possibly call on_io_error?
 		return true;
 	}
-	data = transaction->second.handler(data, header.length - 1, header, boost::system::error_code());
+	data = transaction->second.handler(data, header.length - 1, header, std::error_code());
 	transactions.erase(transaction);
 
 	// Remove read data and handled transaction.

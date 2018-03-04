@@ -23,7 +23,7 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #pragma once
-#include <boost/system/error_code.hpp>
+#include <system_error>
 
 namespace modbus {
 
@@ -51,11 +51,11 @@ namespace errc {
 using errc_t = errc::errc_t;
 
 /// The error category for Modbus errors.
-boost::system::error_category const & modbus_category();
+std::error_category const & modbus_category();
 
 /// Get an error code for a Modbus error,
-inline boost::system::error_code modbus_error(modbus::errc_t error_code) {
-	return boost::system::error_code(error_code, modbus_category());
+inline std::error_code modbus_error(modbus::errc_t error_code) {
+	return std::error_code(error_code, modbus_category());
 }
 
 }

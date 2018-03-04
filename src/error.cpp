@@ -29,7 +29,7 @@ namespace modbus {
 
 namespace {
 	/// Error category for modbus errors.
-	class modbus_category_t : public boost::system::error_category {
+	class modbus_category_t : public std::error_category {
 		/// Get the name of the error category
 		char const * name() const noexcept override {
 			return "modbus";
@@ -60,9 +60,8 @@ namespace {
 }
 
 /// The error category for modbus errors.
-boost::system::error_category const & modbus_category() {
+std::error_category const & modbus_category() {
 	return modbus_category_;
 }
-
 
 }

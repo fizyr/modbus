@@ -7,7 +7,6 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 add_compile_options(-Wall -Wextra -Wpedantic)
 
 find_package(catkin REQUIRED COMPONENTS)
-find_package(Boost REQUIRED COMPONENTS system thread)
 
 set(CMAKE_THREAD_PREFER_PTHREAD ON)
 find_package(Threads)

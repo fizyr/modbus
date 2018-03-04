@@ -31,7 +31,7 @@ namespace impl {
 
 /// Deserialize a TCP MBAP header.
 template<typename InputIterator>
-InputIterator deserialize(InputIterator start, std::size_t length, tcp_mbap & header, boost::system::error_code & error) {
+InputIterator deserialize(InputIterator start, std::size_t length, tcp_mbap & header, std::error_code & error) {
 	if (!check_length(length, 7, error)) return start;
 	start = deserialize_be16(start, header.transaction);
 	start = deserialize_be16(start, header.protocol   );

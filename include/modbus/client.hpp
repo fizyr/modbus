@@ -29,10 +29,10 @@
 #include <functional>
 #include <string>
 
-#include <boost/asio/io_service.hpp>
-#include <boost/asio/strand.hpp>
-#include <boost/asio/ip/tcp.hpp>
-#include <boost/asio/streambuf.hpp>
+#include <asio/io_service.hpp>
+#include <asio/strand.hpp>
+#include <asio/ip/tcp.hpp>
+#include <asio/streambuf.hpp>
 
 #include "functions.hpp"
 #include "tcp.hpp"
@@ -45,21 +45,21 @@ namespace modbus {
 /// A connection to a Modbus server.
 class client  {
 public:
-	typedef boost::asio::ip::tcp tcp;
+	typedef asio::ip::tcp tcp;
 
 	/// Callback type.
 	template<typename T>
-	using Callback = std::function<void (tcp_mbap const & header, T const & response, boost::system::error_code const &)>;
+	using Callback = std::function<void (tcp_mbap const & header, T const & response, std::error_code const &)>;
 
 	/// Callback to invoke for IO errors that cants be linked to a specific transaction.
 	/**
 	 * Additionally the connection will be closed and every transaction callback will be called with an EOF error.
 	 */
-	std::function<void (boost::system::error_code const &)> on_io_error;
+	std::function<void (std::error_code const &)> on_io_error;
 
 protected:
 	/// Low level message handler.
-	using Handler = std::function<std::uint8_t const * (std::uint8_t const * start, std::size_t size, tcp_mbap const & header, boost::system::error_code error)>;
+	using Handler = std::function<std::uint8_t const * (std::uint8_t const * start, std::size_t size, tcp_mbap const & header, std::error_code error)>;
 
 	/// Struct to hold transaction details.
 	struct transaction_t {
@@ -68,7 +68,7 @@ protected:
 	};
 
 	/// Strand to use to prevent concurrent handler execution.
-	boost::asio::io_service::strand strand;
+	asio::io_service::strand strand;
 
 	/// The socket to use.
 	tcp::socket socket;
@@ -77,10 +77,10 @@ protected:
 	tcp::resolver resolver;
 
 	/// Buffer for read operations.
-	boost::asio::streambuf read_buffer;
+	asio::streambuf read_buffer;
 
 	/// Buffer for write operations.
-	boost::asio::streambuf write_buffer;
+	asio::streambuf write_buffer;
 
 	/// Output iterator for write buffer.
 	std::ostreambuf_iterator<char> output_iterator{&write_buffer};
@@ -104,23 +104,23 @@ protected:
 public:
 	/// Construct a client.
 	client(
-		boost::asio::io_service & ios ///< The IO service to use.
+		asio::io_service & ios ///< The IO service to use.
 	);
 
 	/// Get the IO service used by the client.
-	boost::asio::io_service & ios() { return socket.get_io_service(); };
+	asio::io_service & ios() { return socket.get_io_service(); };
 
 	/// Connect to a server.
 	void connect(
 		std::string const & hostname,                                   ///< The IP address or host name of the server.
 		std::string const & port,                                       ///< The port to connect to.
-		std::function<void(boost::system::error_code const &)> callback ///< The callback to invoke when the connection is established, or when an error occurs.
+		std::function<void(std::error_code const &)> callback ///< The callback to invoke when the connection is established, or when an error occurs.
 	);
 
 	/// Connect to a server at the default Modbus port 502.
 	void connect(
 		std::string const & hostname,                                   ///< The IP address or host name of the server.
-		std::function<void(boost::system::error_code const &)> callback ///< The callback to invoke when the connection is established, or when an error occurs.
+		std::function<void(std::error_code const &)> callback ///< The callback to invoke when the connection is established, or when an error occurs.
 	) {
 		connect(hostname, "502", callback);
 	}
@@ -230,28 +230,28 @@ public:
 protected:
 	/// Called when the resolver finished resolving a hostname.
 	void on_resolve(
-		boost::system::error_code const & error,                        ///<[in] The error that occured, if any.
-		tcp::resolver::iterator iterator,                               ///<[in] The iterator to the first endpoint found by the resolver.
-		std::function<void(boost::system::error_code const &)> callback ///<[in] User callback to invoke whent the connection succeeded.
+		std::error_code const & error,                        ///<[in] The error that occured, if any.
+		tcp::resolver::iterator iterator,                     ///<[in] The iterator to the first endpoint found by the resolver.
+		std::function<void(std::error_code const &)> callback ///<[in] User callback to invoke whent the connection succeeded.
 	);
 
 	/// Called when the socket finished connecting.
 	void on_connect(
-		boost::system::error_code const & error,                        ///<[in] The error that occured, if any.
-		tcp::resolver::iterator iterator,                               ///<[in] The iterator to the first endpoint found by the resolver.
-		std::function<void(boost::system::error_code const &)> callback ///<[in] User callback to invoke whent the connection succeeded.
+		std::error_code const & error,                        ///<[in] The error that occured, if any.
+		tcp::resolver::iterator iterator,                     ///<[in] The iterator to the first endpoint found by the resolver.
+		std::function<void(std::error_code const &)> callback ///<[in] User callback to invoke whent the connection succeeded.
 	);
 
 	/// Called when the socket finished a read operation.
 	void on_read(
-		boost::system::error_code const & error, ///<[in] The error that occured, if any.
-		std::size_t bytes_transferred            ///<[in] The amount of bytes read from the socket.
+		std::error_code const & error, ///<[in] The error that occured, if any.
+		std::size_t bytes_transferred  ///<[in] The amount of bytes read from the socket.
 	);
 
 	/// Called when the socket finished a write operation.
 	void on_write(
-		boost::system::error_code const & error, ///<[in] The error that occured, if any.
-		std::size_t bytes_transferred            ///<[in] The amount of bytes read from the socket.
+		std::error_code const & error, ///<[in] The error that occured, if any.
+		std::size_t bytes_transferred  ///<[in] The amount of bytes read from the socket.
 	);
 
 	/// Allocate a transaction in the transaction table.
