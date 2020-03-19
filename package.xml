@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package format="2">
 	<name>modbus</name>
-	<version>0.2.0</version>
+	<version>1.0.0</version>
 	<description>A C++11 modbus TCP library using ASIO.</description>
 	<license>BSD</license>
 	<author email="maarten@de-vri.es">Maarten de Vries</author>
