@@ -60,16 +60,16 @@ int main(int argc, char * * argv) {
 		return -1;
 	}
 
-	asio::io_service ios;
+	asio::io_context io_context;
 
 	std::string hostname = argv[1];
 
-	modbus::client client{ios};
+	modbus::client client{io_context};
 	client.on_io_error = on_io_error;
 	::client = &client;
 
 	client.connect(hostname, "502", on_connect);
 
-	ios.run();
+	io_context.run();
 
 }

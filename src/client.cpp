@@ -108,7 +108,7 @@ void client::send_message(
 }
 
 /// Construct a client.
-client::client(asio::io_service & ios) : strand(ios), socket(ios), resolver(ios) {
+client::client(asio::io_context & io_context) : strand(io_context), socket(io_context), resolver(io_context) {
 	_connected = false;
 }
 
@@ -142,7 +142,7 @@ void client::reset() {
 	writing.clear();
 
 	// Old socket may hold now invalid file descriptor.
-	socket = asio::ip::tcp::socket(ios());
+	socket = asio::ip::tcp::socket(io_executor());
 	_connected = false;
 }
 

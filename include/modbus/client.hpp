@@ -28,8 +28,9 @@
 #include <cstdint>
 #include <functional>
 #include <string>
+#include <map>
 
-#include <asio/io_service.hpp>
+#include <asio/io_context.hpp>
 #include <asio/strand.hpp>
 #include <asio/ip/tcp.hpp>
 #include <asio/streambuf.hpp>
@@ -68,7 +69,7 @@ protected:
 	};
 
 	/// Strand to use to prevent concurrent handler execution.
-	asio::io_service::strand strand;
+	asio::io_context::strand strand;
 
 	/// The socket to use.
 	tcp::socket socket;
@@ -104,22 +105,22 @@ protected:
 public:
 	/// Construct a client.
 	client(
-		asio::io_service & ios ///< The IO service to use.
+		asio::io_context & io_context ///< The IO context to use.
 	);
 
-	/// Get the IO service used by the client.
-	asio::io_service & ios() { return socket.get_io_service(); };
+	/// Get the IO executor used by the client.
+	tcp::socket::executor_type io_executor() { return socket.get_executor(); };
 
 	/// Connect to a server.
 	void connect(
-		std::string const & hostname,                                   ///< The IP address or host name of the server.
-		std::string const & port,                                       ///< The port to connect to.
+		std::string const & hostname,                         ///< The IP address or host name of the server.
+		std::string const & port,                             ///< The port to connect to.
 		std::function<void(std::error_code const &)> callback ///< The callback to invoke when the connection is established, or when an error occurs.
 	);
 
 	/// Connect to a server at the default Modbus port 502.
 	void connect(
-		std::string const & hostname,                                   ///< The IP address or host name of the server.
+		std::string const & hostname,                         ///< The IP address or host name of the server.
 		std::function<void(std::error_code const &)> callback ///< The callback to invoke when the connection is established, or when an error occurs.
 	) {
 		connect(hostname, "502", callback);
